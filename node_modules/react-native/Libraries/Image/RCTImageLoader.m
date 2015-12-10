@@ -37,7 +37,8 @@
 {
   NSArray<id<RCTImageURLLoader>> *_loaders;
   NSArray<id<RCTImageDataDecoder>> *_decoders;
-  NSURLCache *_cache;
+  dispatch_queue_t _URLCacheQueue;
+  NSURLCache *_URLCache;
 }
 
 @synthesize bridge = _bridge;
@@ -87,9 +88,10 @@ RCT_EXPORT_MODULE()
   _bridge = bridge;
   _loaders = loaders;
   _decoders = decoders;
-  _cache = [[NSURLCache alloc] initWithMemoryCapacity:5 * 1024 * 1024 // 5MB
-                                         diskCapacity:200 * 1024 * 1024 // 200MB
-                                             diskPath:@"React/RCTImageDownloader"];
+  _URLCacheQueue = dispatch_queue_create("com.facebook.react.ImageLoaderURLCacheQueue", DISPATCH_QUEUE_SERIAL);
+  _URLCache = [[NSURLCache alloc] initWithMemoryCapacity:5 * 1024 * 1024 // 5MB
+                                            diskCapacity:200 * 1024 * 1024 // 200MB
+                                                diskPath:@"React/RCTImageDownloader"];
 }
 
 - (id<RCTImageURLLoader>)imageURLLoaderForURL:(NSURL *)URL
@@ -99,8 +101,11 @@ RCT_EXPORT_MODULE()
     float previousPriority = 0;
     id<RCTImageURLLoader> previousLoader = nil;
     for (id<RCTImageURLLoader> loader in _loaders) {
+      float priority = [loader respondsToSelector:@selector(loaderPriority)] ? [loader loaderPriority] : 0;
+      if (previousLoader && priority < previousPriority) {
+        return previousLoader;
+      }
       if ([loader canLoadImageURL:URL]) {
-        float priority = [loader respondsToSelector:@selector(loaderPriority)] ? [loader loaderPriority] : 0;
         if (previousLoader) {
           if (priority == previousPriority) {
             RCTLogError(@"The RCTImageURLLoaders %@ and %@ both reported that"
@@ -114,6 +119,7 @@ RCT_EXPORT_MODULE()
         }
       }
     }
+    return previousLoader;
   }
 
   // Normal code path
@@ -132,8 +138,11 @@ RCT_EXPORT_MODULE()
     float previousPriority = 0;
     id<RCTImageDataDecoder> previousDecoder = nil;
     for (id<RCTImageDataDecoder> decoder in _decoders) {
+      float priority = [decoder respondsToSelector:@selector(decoderPriority)] ? [decoder decoderPriority] : 0;
+      if (previousDecoder && priority < previousPriority) {
+        return previousDecoder;
+      }
       if ([decoder canDecodeImageData:data]) {
-        float priority = [decoder respondsToSelector:@selector(decoderPriority)] ? [decoder decoderPriority] : 0;
         if (previousDecoder) {
           if (priority == previousPriority) {
             RCTLogError(@"The RCTImageDataDecoders %@ and %@ both reported that"
@@ -148,6 +157,7 @@ RCT_EXPORT_MODULE()
         }
       }
     }
+    return previousDecoder;
   }
 
   // Normal code path
@@ -177,12 +187,10 @@ RCT_EXPORT_MODULE()
                                       progressBlock:(RCTImageLoaderProgressBlock)progressHandler
                                     completionBlock:(RCTImageLoaderCompletionBlock)completionBlock
 {
-  if (imageTag.length == 0) {
-    RCTLogWarn(@"source.uri should not be an empty string <Native>");
-    return ^{};
-  }
-
   __block volatile uint32_t cancelled = 0;
+  __block void(^cancelLoad)(void) = nil;
+  __weak RCTImageLoader *weakSelf = self;
+
   RCTImageLoaderCompletionBlock completionHandler = ^(NSError *error, UIImage *image) {
     if ([NSThread isMainThread]) {
 
@@ -198,31 +206,47 @@ RCT_EXPORT_MODULE()
     }
   };
 
-  // Find suitable image URL loader
-  NSURLRequest *request = [RCTConvert NSURLRequest:imageTag];
-  id<RCTImageURLLoader> loadHandler = [self imageURLLoaderForURL:request.URL];
-  if (loadHandler) {
-    return [loadHandler loadImageForURL:request.URL
-                                   size:size
-                                  scale:scale
-                             resizeMode:resizeMode
-                        progressHandler:progressHandler
-                      completionHandler:completionHandler] ?: ^{};
-  }
-
-  // Check if networking module is available
-  if (![_bridge respondsToSelector:@selector(networking)]) {
-    RCTLogError(@"No suitable image URL loader found for %@. You may need to "
-                " import the RCTNetworking library in order to load images.",
-                imageTag);
+  if (imageTag.length == 0) {
+    completionHandler(RCTErrorWithMessage(@"source.uri should not be an empty string"), nil);
     return ^{};
   }
 
-  // Use networking module to load image
-  if ([_bridge.networking canHandleRequest:request]) {
+  // All access to URL cache must be serialized
+  dispatch_async(_URLCacheQueue, ^{
+    RCTImageLoader *strongSelf = weakSelf;
+    if (cancelled || !strongSelf) {
+      return;
+    }
 
-    __weak RCTImageLoader *weakSelf = self;
-    __block RCTImageLoaderCancellationBlock decodeCancel = nil;
+    // Find suitable image URL loader
+    NSURLRequest *request = [RCTConvert NSURLRequest:imageTag];
+    id<RCTImageURLLoader> loadHandler = [strongSelf imageURLLoaderForURL:request.URL];
+    if (loadHandler) {
+      cancelLoad = [loadHandler loadImageForURL:request.URL
+                                           size:size
+                                          scale:scale
+                                     resizeMode:resizeMode
+                                progressHandler:progressHandler
+                              completionHandler:completionHandler] ?: ^{};
+      return;
+    }
+
+    // Check if networking module is available
+    if (RCT_DEBUG && ![_bridge respondsToSelector:@selector(networking)]) {
+      RCTLogError(@"No suitable image URL loader found for %@. You may need to "
+                  " import the RCTNetworking library in order to load images.",
+                  imageTag);
+      return;
+    }
+
+    // Check if networking module can load image
+    if (RCT_DEBUG && ![_bridge.networking canHandleRequest:request]) {
+      RCTLogError(@"No suitable image URL loader found for %@", imageTag);
+      return;
+    }
+
+    // Use networking module to load image
+    __block RCTImageLoaderCancellationBlock cancelDecode = nil;
     RCTURLRequestCompletionBlock processResponse =
     ^(NSURLResponse *response, NSData *data, NSError *error) {
 
@@ -247,26 +271,26 @@ RCT_EXPORT_MODULE()
       }
 
       // Decode image
-      decodeCancel = [weakSelf decodeImageData:data
-                                          size:size
-                                         scale:scale
-                                    resizeMode:resizeMode
-                               completionBlock:completionHandler];
+      cancelDecode = [strongSelf decodeImageData:data
+                                            size:size
+                                           scale:scale
+                                      resizeMode:resizeMode
+                                 completionBlock:completionHandler];
     };
-
-    // Check for cached response before reloading
-    // TODO: move URL cache out of RCTImageLoader into its own module
-    NSCachedURLResponse *cachedResponse = [_cache cachedResponseForRequest:request];
-    if (cachedResponse) {
-      processResponse(cachedResponse.response, cachedResponse.data, nil);
-      return ^{};
-    }
 
     // Add missing png extension
     if (request.URL.fileURL && request.URL.pathExtension.length == 0) {
       NSMutableURLRequest *mutableRequest = [request mutableCopy];
       mutableRequest.URL = [NSURL fileURLWithPath:[request.URL.path stringByAppendingPathExtension:@"png"]];
       request = mutableRequest;
+    }
+
+    // Check for cached response before reloading
+    // TODO: move URL cache out of RCTImageLoader into its own module
+    NSCachedURLResponse *cachedResponse = [_URLCache cachedResponseForRequest:request];
+    if (cachedResponse) {
+      processResponse(cachedResponse.response, cachedResponse.data, nil);
+      return;
     }
 
     // Download image
@@ -277,35 +301,42 @@ RCT_EXPORT_MODULE()
         return;
       }
 
-      // Cache the response
-      // TODO: move URL cache out of RCTImageLoader into its own module
-      RCTImageLoader *strongSelf = weakSelf;
-      BOOL isHTTPRequest = [request.URL.scheme hasPrefix:@"http"];
-      [strongSelf->_cache storeCachedResponse:
-       [[NSCachedURLResponse alloc] initWithResponse:response
-                                                data:data
-                                            userInfo:nil
-                                       storagePolicy:isHTTPRequest ? NSURLCacheStorageAllowed: NSURLCacheStorageAllowedInMemoryOnly]
-                                   forRequest:request];
+      dispatch_async(_URLCacheQueue, ^{
 
-      // Process image data
-      processResponse(response, data, nil);
+        // Cache the response
+        // TODO: move URL cache out of RCTImageLoader into its own module
+        BOOL isHTTPRequest = [request.URL.scheme hasPrefix:@"http"];
+        [strongSelf->_URLCache storeCachedResponse:
+         [[NSCachedURLResponse alloc] initWithResponse:response
+                                                  data:data
+                                              userInfo:nil
+                                         storagePolicy:isHTTPRequest ? NSURLCacheStorageAllowed: NSURLCacheStorageAllowedInMemoryOnly]
+                                        forRequest:request];
+
+        // Process image data
+        processResponse(response, data, nil);
+
+      });
 
     }];
     task.downloadProgressBlock = progressHandler;
     [task start];
 
-    return ^{
+    cancelLoad = ^{
       [task cancel];
-      if (decodeCancel) {
-        decodeCancel();
+      if (cancelDecode) {
+        cancelDecode();
       }
-      OSAtomicOr32Barrier(1, &cancelled);
     };
-  }
 
-  RCTLogError(@"No suitable image URL loader found for %@", imageTag);
-  return ^{};
+  });
+
+  return ^{
+    if (cancelLoad) {
+      cancelLoad();
+    }
+    OSAtomicOr32Barrier(1, &cancelled);
+  };
 }
 
 - (RCTImageLoaderCancellationBlock)decodeImageData:(NSData *)data
@@ -314,6 +345,11 @@ RCT_EXPORT_MODULE()
                                         resizeMode:(UIViewContentMode)resizeMode
                                    completionBlock:(RCTImageLoaderCompletionBlock)completionHandler
 {
+  if (data.length == 0) {
+    completionHandler(RCTErrorWithMessage(@"No image data"), nil);
+    return ^{};
+  }
+
   id<RCTImageDataDecoder> imageDecoder = [self imageDataDecoderForData:data];
   if (imageDecoder) {
 
@@ -329,7 +365,7 @@ RCT_EXPORT_MODULE()
       if (cancelled) {
         return;
       }
-      UIImage *image = [UIImage imageWithData:data scale:scale];
+      UIImage *image = RCTDecodeImageWithData(data, size, scale, resizeMode);
       if (image) {
         completionHandler(nil, image);
       } else {
