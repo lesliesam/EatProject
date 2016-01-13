@@ -11,17 +11,22 @@ var {
   NavigatorIOS,
 } = React;
 
-var HomePage = require('./HomePage')
+var LandingPage = require('./js/view/LandingPage')
 
 var EatProject = React.createClass({
   render: function() {
     return (
-      <NavigatorIOS
-        style={styles.container}
+      <NavigatorIOS 
+          style={styles.container} 
+          barTintColor='#1789d5'
+          tintColor='#FFFFFF'
+          titleTextColor='#FFFFFF'
         initialRoute={{
-          title: 'My Home',
-          component: HomePage,
-        }}/>
+          title: 'Landing',
+          component: LandingPage,
+          backButtonTitle: ' ',
+          navigationBarHidden: true,
+      }}/>
     );
   }
 });
