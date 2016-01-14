@@ -15,11 +15,16 @@ var LoginPage = require('./LoginPage')
 
 var LandingPage = React.createClass({
 	loginPress: function(movie: Object) {
-		this.props.navigator.push({
+		// this.props.navigator.push({
+		// 	title: '邮箱登陆',
+		// 	component: LoginPage,
+		// 	backButtonTitle: ' ',
+		// 	navigationBarHidden: 'false',
+		// });
+
+		this.props.navigator.replace({
 			title: '邮箱登陆',
-			component: LoginPage,
-			backButtonTitle: ' ',
-			navigationBarHidden: 'false',
+			name: 'login',
 		});
 	},
 
@@ -73,14 +78,16 @@ var styles = StyleSheet.create({
 		resizeMode: Image.resizeMode.contain,
 	},
 	loginClickableArea: {
-		marginTop: 30
+		marginTop: 30,
 	},
 	loginText: {
-		flex: 1,
-		width: 200,
 		fontSize: 20,
+		width: 200,
+		height: 30,
+		lineHeight: 25,
 		textAlign: 'center',
-		backgroundColor: '#aaaaaa', 
+		color: '#ffffff',
+		backgroundColor: '#1789d5',
 	}
 })
 

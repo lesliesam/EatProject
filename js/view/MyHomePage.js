@@ -20,6 +20,18 @@ var MyHomePage = React.createClass({
 		};
 	},
 
+	myActivitiesOnClick: function() {
+
+	},
+
+	myNoticeOnClick: function() {
+
+	},
+
+	mySettingsOnClick: function() {
+
+	},
+
 	render: function() {
 		return (
 			<View style={styles.wrapper}>
@@ -83,7 +95,55 @@ var MyHomePage = React.createClass({
 				</View>
 
 				<View style={styles.line}/>
+
+				<TouchableHighlight 
+					style={styles.toaClickableArea}
+					onPress={this.myActivitiesOnClick}
+					underlayColor='#d0d0d0'>
+					<View style={styles.toa}>
+						<Image 
+							style={styles.toaIcon} 
+							source={require('../../images/icon_me_dynamic.png')}/>
+						<Text style={styles.toaName}>
+							我的动态
+						</Text>
+					</View>
+				</TouchableHighlight>
+
+				<View style={styles.line}/>
+
+				<TouchableHighlight 
+					style={styles.toaClickableArea}
+					onPress={this.myNoticeOnClick}
+					underlayColor='#d0d0d0'>
+					<View style={styles.toa}>
+						<Image 
+							style={styles.toaIcon} 
+							source={require('../../images/icon_me_message.png')}/>
+						<Text style={styles.toaName}>
+							通知
+						</Text>
+					</View>
+				</TouchableHighlight>
+
+				<View style={styles.line}/>
+
+				<TouchableHighlight 
+					style={styles.toaClickableArea}
+					onPress={this.mySettingsOnClick}
+					underlayColor='#d0d0d0'>
+					<View style={styles.toa}>
+						<Image 
+							style={styles.toaIcon} 
+							source={require('../../images/icon_me_setting.png')}/>
+						<Text style={styles.toaName}>
+							设置
+						</Text>
+					</View>
+				</TouchableHighlight>
 				
+				<View style={styles.line}/>
+
 			</View>
 			
 		);
@@ -93,13 +153,12 @@ var MyHomePage = React.createClass({
 var styles = StyleSheet.create({
 	wrapper: {
 		alignItems: 'center',
-		paddingTop: 70,
 	},
 	line: {
 		alignSelf: 'stretch',
 		height: 1,
 		borderWidth: 0.2,
-		borderColor: '#eaeaea'
+		borderColor: '#d0d0d0'
 	},
 	profileContainer: {
 		flexDirection: 'row',
@@ -170,11 +229,34 @@ var styles = StyleSheet.create({
 	liveTradeButton: {
 		fontSize: 15,
 		width: 120,
-		height: 22,
-		lineHeight: 19,
+		height: 26,
+		lineHeight: 20,
 		textAlign: 'center',
 		color: '#ffffff',
 		backgroundColor: '#1789d5',
+	},
+	toaClickableArea: {
+		flexDirection: 'row',
+		alignSelf: 'stretch',
+	},
+	toa: {
+		flexDirection: 'row',
+		alignSelf: 'stretch',
+		alignItems: 'center',
+		paddingTop: 15,
+		paddingBottom: 15,
+		justifyContent: 'flex-start',
+	},
+	toaIcon: {
+		width: 20,
+		height: 20,
+		marginLeft: 15,
+		resizeMode: Image.resizeMode.contain,
+	},
+	toaName: {
+		fontSize: 15,
+		textAlign: 'center',
+		marginLeft: 30,
 	},
 });
 

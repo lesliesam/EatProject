@@ -8,9 +8,11 @@ var {
 	Text,
 	TouchableHighlight,
 } = React;
+var Toast = require('@remobile/react-native-toast');
 var LogicData = require('../LogicData')
 var MyHomePage = require('./MyHomePage')
 
+var requestSuccess = true;
 const API = 'https://cn1.api.tradehero.mobi/api/'
 
 var LoginPage = React.createClass({
@@ -34,40 +36,52 @@ var LoginPage = React.createClass({
 	},
 
 	loginPress: function() {
-		console.log('userName is ' + this.state.userName)
-		console.log('password is ' + this.state.password)
+		LogicData.setUserSecretKey(this.state.userName, this.state.password)
 		fetch('https://cn1.api.tradehero.mobi/api/signupAndLogin', {
 			method: 'POST',
 			headers: {
-				'Authorization': 'Basic MTM4MTY2MzEwMTk6MTExMTExMQ==',
+				'Authorization': LogicData.getUserSecretKey(),
 				'TH-Client-Version': '4.2.0.10068',
 				'TH-Language-Code': 'zh-CN',
 				'TH-Client-Type': 6,
 				'Content-Type': 'application/json; charset=UTF-8'
 			},
 			body: JSON.stringify({
-		        device_access_token: '865624026741091',
-		        clientType: 6,
-		        clientVersion: '4.2.0.10068',
-		        deviceToken: ' ',
-		        channelType: 1,
-		        isEmailLogin: true
+				device_access_token: '865624026741091',
+				clientType: 6,
+				clientVersion: '4.2.0.10068',
+				deviceToken: ' ',
+				channelType: 1,
+				isEmailLogin: true
 		    })
 		})
-		.then((response) => response.json())
 		.then((response) => {
-			this.loginSuccess(response);
+			console.log(response)
+			if (response.status === 200) {
+				console.log('success')
+				requestSuccess = true;
+			} else {
+				console.log('failed')
+				requestSuccess = false;
+			}
+			return response.json()
 		})
+		.then((responseJson) => {
+			if (requestSuccess) {
+				this.loginSuccess(responseJson);
+			} else {
+				Toast.showShortTop(responseJson.Message);
+			}
+		});
 	},
 
 	loginSuccess: function(userData) {
 		LogicData.setUserData(userData);
 		console.log(LogicData.getUserData());
 
-		this.props.navigator.push({
+		this.props.navigator.replace({
 			title: '我的',
-			component: MyHomePage,
-			backButtonTitle: ' ',
+			name: 'myhome',
 		});
 	},
 
@@ -76,21 +90,21 @@ var LoginPage = React.createClass({
 			<View style={styles.wrapper}>
 				<View style={styles.rowWrapper}>
 					<Text style={styles.textInputLabel}>
-						User name:
+						用户名：
 					</Text>
 					<TextInput style={styles.textInput} 
 						onChangeText={(text) => this.setUserName(text)}
-						placeholder='Please input your name'
+						placeholder='请输入用户名'
 					/>
 				</View>
 
 				<View style={styles.rowWrapper}>
 					<Text style={styles.textInputLabel}>
-						Password:
+						密码：
 					</Text>
 					<TextInput style={styles.textInput} 
 						onChangeText={(text) => this.setPassword(text)}
-						placeholder='Please input your password'
+						placeholder='请输入密码'
 						secureTextEntry={true}
 					/>
 				</View>
@@ -109,7 +123,7 @@ var LoginPage = React.createClass({
 var styles = StyleSheet.create({
 	wrapper: {
 		alignItems: 'center',
-		paddingTop: 80,
+		paddingTop: 40,
 	},
 	rowWrapper: {
 		flexDirection: 'row',
@@ -138,11 +152,13 @@ var styles = StyleSheet.create({
 		marginTop: 30
 	},
 	loginText: {
-		flex: 1,
-		width: 200,
 		fontSize: 20,
+		width: 200,
+		height: 30,
+		lineHeight: 25,
 		textAlign: 'center',
-		backgroundColor: '#aaaaaa', 
+		color: '#ffffff',
+		backgroundColor: '#1789d5',
 	}
 })
 
