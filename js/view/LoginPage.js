@@ -7,6 +7,7 @@ var {
 	TextInput,
 	Text,
 	TouchableHighlight,
+	ActivityIndicatorIOS,
 } = React;
 var Toast = require('@remobile/react-native-toast');
 var LogicData = require('../LogicData')
@@ -20,6 +21,7 @@ var LoginPage = React.createClass({
 		return {
 			userName: '',
 			password: '',
+			animating: false,
 		};
 	},
 
@@ -36,6 +38,9 @@ var LoginPage = React.createClass({
 	},
 
 	loginPress: function() {
+		this.setState({
+			animating: true
+		});
 		LogicData.setUserSecretKey(this.state.userName, this.state.password)
 		fetch('https://cn1.api.tradehero.mobi/api/signupAndLogin', {
 			method: 'POST',
@@ -64,6 +69,9 @@ var LoginPage = React.createClass({
 				console.log('failed')
 				requestSuccess = false;
 			}
+			this.setState({
+				animating: false
+			});
 			return response.json()
 		})
 		.then((responseJson) => {
@@ -115,6 +123,12 @@ var LoginPage = React.createClass({
 						登录
 					</Text>
 				</TouchableHighlight>
+
+				<ActivityIndicatorIOS
+					animating={this.state.animating}
+					style={[styles.centering, {height: 80}]}
+					size="small" />
+
 			</View>
 		)
 	}
@@ -159,6 +173,9 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 		color: '#ffffff',
 		backgroundColor: '#1789d5',
+	},
+	progressView: {
+		marginTop: 20,
 	}
 })
 
