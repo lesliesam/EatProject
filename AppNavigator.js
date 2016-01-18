@@ -13,6 +13,7 @@ var LandingPage = require('./js/view/LandingPage')
 var LoginPage = require('./js/view/LoginPage')
 var MyHomePage = require('./js/view/MyHomePage')
 var MySettings = require('./js/view/MySettings')
+var MyNotifications = require('./js/view/MyNotifications')
 
 var _navigator;
 BackAndroid.addEventListener('hardwareBackPress', () => {
@@ -53,6 +54,13 @@ var RouteMapper = function(route, navigationOperations, onComponentRef) {
 			<View style={{flex: 1}}>
 				<NavBar title="设置" showBackButton='true' navigator={navigationOperations}/>
 				<MySettings navigator={navigationOperations} />
+			</View>
+		);
+	} else if (route.name === 'myNotifications') {
+		return (
+			<View style={{flex: 1}}>
+				<NavBar title="设置" showBackButton='true' navigator={navigationOperations}/>
+				<MyNotifications navigator={navigationOperations} />
 			</View>
 		);
 	}
