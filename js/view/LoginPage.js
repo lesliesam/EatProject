@@ -180,7 +180,7 @@ var styles = StyleSheet.create({
 		fontSize: 12,
 	},
 	loginClickableArea: {
-		marginTop: 30
+		marginTop: 20
 	},
 	loginText: {
 		fontSize: 20,

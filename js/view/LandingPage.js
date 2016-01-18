@@ -76,7 +76,7 @@ var LandingPage = React.createClass({
 var styles = StyleSheet.create({
 	wrapper: {
 		alignItems: 'center',
-		padding: 20,
+		paddingTop: 20,
 	},
 	slide: {
 		alignItems: 'center',
@@ -84,6 +84,12 @@ var styles = StyleSheet.create({
 	image: {
 		flex: 1,
 		height: 400,
+		resizeMode: Image.resizeMode.contain,
+	},
+	cloudImage: {
+		flex: 1,
+		height: 50,
+		marginTop: -50,
 		resizeMode: Image.resizeMode.contain,
 	},
 	guestLoginClickableArea: {

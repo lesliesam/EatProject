@@ -25,7 +25,9 @@ var MyHomePage = React.createClass({
 	},
 
 	myNoticeOnClick: function() {
-
+		this.props.navigator.push({
+			name: 'myNotifications',
+		});
 	},
 
 	mySettingsOnClick: function() {
