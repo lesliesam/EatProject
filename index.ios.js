@@ -16,6 +16,7 @@ var NavBar = require('./js/view/NavBar')
 var LandingPage = require('./js/view/LandingPage')
 var LoginPage = require('./js/view/LoginPage')
 var MyHomePage = require('./js/view/MyHomePage')
+var MySettings = require('./js/view/MySettings')
 
 var RouteMapper = function(route, navigationOperations, onComponentRef) {
   var showBackButton = true;
@@ -37,8 +38,15 @@ var RouteMapper = function(route, navigationOperations, onComponentRef) {
   } else if (route.name === 'myhome') {
     return (
       <View style={{flex: 1}}>
-        <NavBar title="我的"/>
+        <NavBar title="我的" />
         <MyHomePage navigator={navigationOperations} />
+      </View>
+    );
+  } else if (route.name === 'settings') {
+    return (
+      <View style={{flex: 1}}>
+        <NavBar title="设置" showBackButton='true' navigator={navigationOperations}/>
+        <MySettings navigator={navigationOperations} />
       </View>
     );
   }
@@ -62,7 +70,7 @@ var EatProject = React.createClass({
       <Navigator
         style={styles.container}
         initialRoute={{name: 'landing'}}
-        configureScene={() => Navigator.SceneConfigs.HorizontalSwipeJump}
+        configureScene={() => Navigator.SceneConfigs.PushFromRight}
         renderScene={RouteMapper} />
     );
   }
@@ -71,7 +79,7 @@ var EatProject = React.createClass({
 var styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#eaeaea',
   },
 });
 

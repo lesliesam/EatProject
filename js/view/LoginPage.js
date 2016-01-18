@@ -3,6 +3,7 @@
 var React = require('react-native')
 var {
 	StyleSheet,
+	Platform,
 	View,
 	TextInput,
 	Text,
@@ -38,6 +39,12 @@ var LoginPage = React.createClass({
 	},
 
 	loginPress: function() {
+		if (this.state.userName === '') {
+			this.state.userName = '13816631019';
+		}
+		if (this.state.password === '') {
+			this.state.password = '1111111';
+		}
 		this.setState({
 			animating: true
 		});
@@ -88,12 +95,16 @@ var LoginPage = React.createClass({
 		console.log(LogicData.getUserData());
 
 		this.props.navigator.replace({
-			title: '我的',
 			name: 'myhome',
 		});
 	},
 
 	render: function() {
+
+		var line = <View style={styles.line}/>;
+		if (Platform.OS === 'android') {
+			line = <View />;
+		}
 		return (
 			<View style={styles.wrapper}>
 				<View style={styles.rowWrapper}>
@@ -105,6 +116,8 @@ var LoginPage = React.createClass({
 						placeholder='请输入用户名'
 					/>
 				</View>
+
+				{line}
 
 				<View style={styles.rowWrapper}>
 					<Text style={styles.textInputLabel}>
@@ -147,6 +160,13 @@ var styles = StyleSheet.create({
 		paddingRight: 20,
 		paddingBottom: 10,
 		justifyContent: 'flex-start',
+		backgroundColor: '#ffffff',
+	},
+	line: {
+		alignSelf: 'stretch',
+		height: 1,
+		borderWidth: 0.25,
+		borderColor: '#d0d0d0'
 	},
 	textInputLabel: {
 		flex: 1,
@@ -156,11 +176,8 @@ var styles = StyleSheet.create({
 	textInput: {
 		flex: 3,
 		width: 200,
-		height: 20,
+		height: 30,
 		fontSize: 12,
-		borderColor: 'gray', 
-		borderWidth: 1,
-		textAlign: 'center',
 	},
 	loginClickableArea: {
 		marginTop: 30

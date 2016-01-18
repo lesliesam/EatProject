@@ -29,7 +29,9 @@ var MyHomePage = React.createClass({
 	},
 
 	mySettingsOnClick: function() {
-
+		this.props.navigator.push({
+			name: 'settings',
+		});
 	},
 
 	render: function() {
@@ -157,7 +159,7 @@ var styles = StyleSheet.create({
 	line: {
 		alignSelf: 'stretch',
 		height: 1,
-		borderWidth: 0.2,
+		borderWidth: 0.25,
 		borderColor: '#d0d0d0'
 	},
 	profileContainer: {

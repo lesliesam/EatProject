@@ -8,14 +8,22 @@ var {
 	View,
 	Text,
 	Image,
+	TouchableHighlight,
 } = React;
 
 var NavBar = React.createClass({
+	backOnClick: function() {
+		this.props.navigator.pop();
+	},
 	render: function() {
 		var backButton = this.props.showBackButton?
-		<Image 
-			style={styles.backButton} 
-			source={require('../../images/icon_return_default.png')}/>
+		<TouchableHighlight 
+			onPress={this.backOnClick}
+			underlayColor='#1789d5'>
+			<Image 
+				style={styles.backButton} 
+				source={require('../../images/icon_return_default.png')}/>
+		</TouchableHighlight>
 		:
 		<View />
 

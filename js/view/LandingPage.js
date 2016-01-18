@@ -14,7 +14,7 @@ var {
 var LoginPage = require('./LoginPage')
 
 var LandingPage = React.createClass({
-	loginPress: function(movie: Object) {
+	loginPress: function() {
 		// this.props.navigator.push({
 		// 	title: '邮箱登陆',
 		// 	component: LoginPage,
@@ -23,25 +23,22 @@ var LandingPage = React.createClass({
 		// });
 
 		this.props.navigator.replace({
-			title: '邮箱登陆',
 			name: 'login',
 		});
+	},
+
+	guestLoginPress: function() {
+
 	},
 
 	render: function() {
 		return (
 			<View style={styles.wrapper}>
-				<Swiper height={550} loop={false} bounces={true}>
+				<Swiper height={420} loop={false} bounces={true}>
 					<View style={styles.slide}>
 						<Image 
 							style={styles.image} 
 							source={require('../../images/guide_screen1.png')}/>
-						<TouchableHighlight style={styles.loginClickableArea}
-							onPress={this.loginPress}>
-							<Text style={styles.loginText}>
-								登录
-							</Text>
-						</TouchableHighlight>
 					</View>
 					<View style={styles.slide}>
 						<Image 
@@ -59,6 +56,18 @@ var LandingPage = React.createClass({
 							source={require('../../images/guide_screen4.png')}/>
 					</View>
 				</Swiper>
+				<TouchableHighlight style={styles.guestLoginClickableArea}
+					onPress={this.guestLoginPress}>
+					<Text style={styles.guestLoginText}>
+						马上体验
+					</Text>
+				</TouchableHighlight>
+				<TouchableHighlight style={styles.loginClickableArea}
+					onPress={this.loginPress}>
+					<Text style={styles.loginText}>
+						登录
+					</Text>
+				</TouchableHighlight>
 			</View>
 		)
 	}
@@ -77,8 +86,20 @@ var styles = StyleSheet.create({
 		height: 400,
 		resizeMode: Image.resizeMode.contain,
 	},
+	guestLoginClickableArea: {
+		marginTop: 0,
+	},
 	loginClickableArea: {
-		marginTop: 30,
+		marginTop: 10,
+	},
+	guestLoginText: {
+		fontSize: 20,
+		width: 200,
+		height: 30,
+		lineHeight: 25,
+		textAlign: 'center',
+		color: '#ffffff',
+		backgroundColor: '#D78F91',
 	},
 	loginText: {
 		fontSize: 20,
@@ -88,7 +109,7 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 		color: '#ffffff',
 		backgroundColor: '#1789d5',
-	}
+	},
 })
 
 module.exports = LandingPage;

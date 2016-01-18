@@ -1,7 +1,9 @@
 package com.eatproject;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 
 import com.facebook.react.LifecycleState;
@@ -20,6 +22,11 @@ public class MainActivity extends Activity implements DefaultHardwareBackBtnHand
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mReactRootView = new ReactRootView(this);
+
+        SharedPreferences preferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+//        preferences.edit().putString("debug_http_host", "fhmainstorage.blob.core.windows.net/fhres").apply();
+        preferences.edit().putString("debug_http_host", "192.168.20.77:8081").apply();
 
         mReactInstanceManager = ReactInstanceManager.builder()
                 .setApplication(getApplication())
