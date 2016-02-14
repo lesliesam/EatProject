@@ -32,7 +32,7 @@ var MyHomePage = React.createClass({
 
 	mySettingsOnClick: function() {
 		this.props.navigator.push({
-			name: 'settings',
+			name: 'mySettings',
 		});
 	},
 

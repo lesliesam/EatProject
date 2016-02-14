@@ -56,7 +56,7 @@ static NSString *RCTGenerateFormBoundary()
   return [[NSString alloc] initWithBytesNoCopy:bytes length:boundaryLength encoding:NSUTF8StringEncoding freeWhenDone:YES];
 }
 
-- (RCTURLRequestCancellationBlock)process:(NSDictionaryArray *)formData
+- (RCTURLRequestCancellationBlock)process:(NSArray<NSDictionary *> *)formData
                                  callback:(RCTHTTPQueryResult)callback
 {
   RCTAssertThread(_networker.methodQueue, @"process: must be called on method queue");
@@ -136,6 +136,10 @@ RCT_EXPORT_MODULE()
 
 - (id<RCTURLRequestHandler>)handlerForRequest:(NSURLRequest *)request
 {
+  if (!request.URL) {
+    return nil;
+  }
+
   if (!_handlers) {
 
     // get handlers
@@ -206,7 +210,7 @@ RCT_EXPORT_MODULE()
   NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
   request.HTTPMethod = [RCTConvert NSString:RCTNilIfNull(query[@"method"])].uppercaseString ?: @"GET";
   request.allHTTPHeaderFields = [RCTConvert NSDictionary:query[@"headers"]];
-
+  request.timeoutInterval = [RCTConvert NSTimeInterval:query[@"timeout"]];
   NSDictionary<NSString *, id> *data = [RCTConvert NSDictionary:RCTNilIfNull(query[@"data"])];
   return [self processDataForHTTPQuery:data callback:^(NSError *error, NSDictionary<NSString *, id> *result) {
     if (error) {
@@ -289,7 +293,7 @@ RCT_EXPORT_MODULE()
       }
     };
   }
-  NSDictionaryArray *formData = [RCTConvert NSDictionaryArray:query[@"formData"]];
+  NSArray<NSDictionary *> *formData = [RCTConvert NSDictionaryArray:query[@"formData"]];
   if (formData) {
     RCTHTTPFormDataHelper *formDataHelper = [RCTHTTPFormDataHelper new];
     formDataHelper.networker = self;
@@ -371,7 +375,8 @@ RCT_EXPORT_MODULE()
         headers = response.MIMEType ? @{@"Content-Type": response.MIMEType} : @{};
         status = 200;
       }
-      NSArray<id> *responseJSON = @[task.requestID, @(status), headers];
+      id responseURL = response.URL ? response.URL.absoluteString : [NSNull null];
+      NSArray<id> *responseJSON = @[task.requestID, @(status), headers, responseURL];
       [_bridge.eventDispatcher sendDeviceEventWithName:@"didReceiveNetworkResponse"
                                                   body:responseJSON];
     });

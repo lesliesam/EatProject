@@ -44,7 +44,7 @@ typedef void (^RCTPropBlock)(id<RCTComponent> view, id json);
   RCTShadowView *_defaultShadowView;
   NSMutableDictionary<NSString *, RCTPropBlock> *_viewPropBlocks;
   NSMutableDictionary<NSString *, RCTPropBlock> *_shadowPropBlocks;
-  RCTBridge *_bridge;
+  __weak RCTBridge *_bridge;
 }
 
 @synthesize manager = _manager;
@@ -77,11 +77,11 @@ typedef void (^RCTPropBlock)(id<RCTComponent> view, id json);
 
 RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
-- (UIView *)createViewWithTag:(NSNumber *)tag props:(NSDictionary<NSString *, id> *)props
+- (UIView *)createViewWithTag:(NSNumber *)tag
 {
   RCTAssertMainThread();
 
-  UIView *view = (UIView *)(props ? [self.manager viewWithProps:props] : [_manager view]);
+  UIView *view = [_manager view];
   view.reactTag = tag;
   view.multipleTouchEnabled = YES;
   view.userInteractionEnabled = YES; // required for touch handling
@@ -114,7 +114,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     if ([managerClass respondsToSelector:selector]) {
       NSArray<NSString *> *typeAndKeyPath =
         ((NSArray<NSString *> *(*)(id, SEL))objc_msgSend)(managerClass, selector);
-      type = NSSelectorFromString([typeAndKeyPath[0] stringByAppendingString:@":"]);
+      type = RCTConvertSelectorForType(typeAndKeyPath[0]);
       keyPath = typeAndKeyPath.count > 1 ? typeAndKeyPath[1] : nil;
     } else {
       propBlock = ^(__unused id view, __unused id json) {};
@@ -296,7 +296,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 
   if (!_defaultView) {
-    _defaultView = [self createViewWithTag:nil props:nil];
+    _defaultView = [self createViewWithTag:nil];
   }
 
   [props enumerateKeysAndObjectsUsingBlock:^(NSString *key, id json, __unused BOOL *stop) {

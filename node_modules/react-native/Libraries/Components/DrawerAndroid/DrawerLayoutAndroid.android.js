@@ -13,7 +13,6 @@
 var NativeMethodsMixin = require('NativeMethodsMixin');
 var React = require('React');
 var ReactPropTypes = require('ReactPropTypes');
-var ReactNativeViewAttributes = require('ReactNativeViewAttributes');
 var StyleSheet = require('StyleSheet');
 var UIManager = require('UIManager');
 var View = require('View');
@@ -21,7 +20,6 @@ var View = require('View');
 var DrawerConsts = UIManager.AndroidDrawerLayout.Constants;
 
 var dismissKeyboard = require('dismissKeyboard');
-var merge = require('merge');
 var requireNativeComponent = require('requireNativeComponent');
 
 var RK_DRAWER_REF = 'drawerlayout';
@@ -104,7 +102,7 @@ var DrawerLayoutAndroid = React.createClass({
     /**
      * Function called when the drawer state has changed. The drawer can be in 3 states:
      * - idle, meaning there is no interaction with the navigation view happening at the time
-     * - dragging, meaning there is currently an interation with the navigation view
+     * - dragging, meaning there is currently an interaction with the navigation view
      * - settling, meaning that there was an interaction with the navigation view, and the
      * navigation view is now finishing it's closing or opening animation
      */

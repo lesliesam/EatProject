@@ -99,6 +99,10 @@ var LoginPage = React.createClass({
 		});
 	},
 
+	forgetPasswordClicked: function() {
+
+	},
+
 	render: function() {
 
 		var line = <View style={styles.line}/>;
@@ -129,6 +133,15 @@ var LoginPage = React.createClass({
 						secureTextEntry={true}
 					/>
 				</View>
+
+				<TouchableHighlight
+					style={styles.forgetPasswordCliableArea}
+					onPress={this.forgetPasswordClicked}
+					underlayColor='#d0d0d0'>
+					<Text style={styles.forgetPasswordLabel}>
+						忘记密码？
+					</Text>
+				</TouchableHighlight>
 
 				<TouchableHighlight style={styles.loginClickableArea}
 					onPress={this.loginPress}>
@@ -180,7 +193,7 @@ var styles = StyleSheet.create({
 		fontSize: 12,
 	},
 	loginClickableArea: {
-		marginTop: 20
+		marginTop: 10
 	},
 	loginText: {
 		fontSize: 20,
@@ -190,6 +203,14 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 		color: '#ffffff',
 		backgroundColor: '#1789d5',
+	},
+	forgetPasswordCliableArea: {
+		alignSelf: 'flex-start',
+		marginTop: 10,
+		marginLeft: 10,
+	},
+	forgetPasswordLabel: {
+		color: "#1789d5",
 	},
 	progressView: {
 		marginTop: 20,
