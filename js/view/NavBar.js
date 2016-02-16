@@ -5,6 +5,7 @@ var {
 	AppRegistry,
 	StyleSheet,
 	Navigator,
+	Platform,
 	View,
 	Text,
 	Image,
@@ -48,7 +49,7 @@ var styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		paddingTop: 15,
+		paddingTop: (Platform.OS === 'ios') ? 15 : 0,
 	},
 	backButton: {
 		width: 30,

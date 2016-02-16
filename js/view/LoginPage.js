@@ -8,11 +8,12 @@ var {
 	TextInput,
 	Text,
 	TouchableHighlight,
-	ActivityIndicatorIOS,
+	Alert,
+	Dimensions,
 } = React;
-var Toast = require('@remobile/react-native-toast');
 var LogicData = require('../LogicData')
 var MyHomePage = require('./MyHomePage')
+var LoadingIndicator = require('./LoadingIndicator')
 
 var requestSuccess = true;
 const API = 'https://cn1.api.tradehero.mobi/api/'
@@ -39,15 +40,18 @@ var LoginPage = React.createClass({
 	},
 
 	loginPress: function() {
+
 		if (this.state.userName === '') {
 			this.state.userName = '13816631019';
 		}
 		if (this.state.password === '') {
 			this.state.password = '1111111';
 		}
+
 		this.setState({
 			animating: true
 		});
+
 		LogicData.setUserSecretKey(this.state.userName, this.state.password)
 		fetch('https://cn1.api.tradehero.mobi/api/signupAndLogin', {
 			method: 'POST',
@@ -76,16 +80,18 @@ var LoginPage = React.createClass({
 				console.log('failed')
 				requestSuccess = false;
 			}
+			
 			this.setState({
 				animating: false
 			});
+
 			return response.json()
 		})
 		.then((responseJson) => {
 			if (requestSuccess) {
 				this.loginSuccess(responseJson);
 			} else {
-				Toast.showShortTop(responseJson.Message);
+				Alert.alert('提示',responseJson.Message);
 			}
 		});
 	},
@@ -104,79 +110,83 @@ var LoginPage = React.createClass({
 	},
 
 	render: function() {
+		var {height, width} = Dimensions.get('window');
 
 		var line = <View style={styles.line}/>;
 		if (Platform.OS === 'android') {
 			line = <View />;
 		}
 		return (
-			<View style={styles.wrapper}>
-				<View style={styles.rowWrapper}>
-					<Text style={styles.textInputLabel}>
-						用户名：
-					</Text>
-					<TextInput style={styles.textInput} 
-						onChangeText={(text) => this.setUserName(text)}
-						placeholder='请输入用户名'
-					/>
+			<View>
+				<View style={[styles.wrapper, {height: height / 2.5}]}>
+					<View>
+						<View style={styles.rowWrapper}>
+							<Text style={styles.textInputLabel}>
+								用户名：
+							</Text>
+							<TextInput style={styles.textInput} 
+								onChangeText={(text) => this.setUserName(text)}
+								placeholder='请输入用户名'
+							/>
+						</View>
+
+						{line}
+
+						<View style={styles.rowWrapper}>
+							<Text style={styles.textInputLabel}>
+								密码：
+							</Text>
+							<TextInput style={styles.textInput} 
+								onChangeText={(text) => this.setPassword(text)}
+								placeholder='请输入密码'
+								secureTextEntry={true}
+							/>
+						</View>
+
+						<TouchableHighlight
+							style={styles.forgetPasswordCliableArea}
+							onPress={this.forgetPasswordClicked}
+							underlayColor='#d0d0d0'>
+							<Text style={styles.forgetPasswordLabel}>
+								忘记密码？
+							</Text>
+						</TouchableHighlight>
+					</View>
+
+					<TouchableHighlight style={styles.loginClickableArea}
+						onPress={this.loginPress}>
+						<Text style={styles.loginText}>
+							登录
+						</Text>
+					</TouchableHighlight>
+
 				</View>
 
-				{line}
-
-				<View style={styles.rowWrapper}>
-					<Text style={styles.textInputLabel}>
-						密码：
-					</Text>
-					<TextInput style={styles.textInput} 
-						onChangeText={(text) => this.setPassword(text)}
-						placeholder='请输入密码'
-						secureTextEntry={true}
-					/>
-				</View>
-
-				<TouchableHighlight
-					style={styles.forgetPasswordCliableArea}
-					onPress={this.forgetPasswordClicked}
-					underlayColor='#d0d0d0'>
-					<Text style={styles.forgetPasswordLabel}>
-						忘记密码？
-					</Text>
-				</TouchableHighlight>
-
-				<TouchableHighlight style={styles.loginClickableArea}
-					onPress={this.loginPress}>
-					<Text style={styles.loginText}>
-						登录
-					</Text>
-				</TouchableHighlight>
-
-				<ActivityIndicatorIOS
-					animating={this.state.animating}
-					style={[styles.centering, {height: 80}]}
-					size="small" />
-
-			</View>
+				{this.state.animating ? 
+					<LoadingIndicator animating={this.state.animating}/> :
+					<View/>}
+			</View>				
 		)
 	}
 })
 
 var styles = StyleSheet.create({
 	wrapper: {
-		alignItems: 'center',
-		paddingTop: 40,
+		alignSelf: 'stretch',
+		alignItems: 'stretch',
+		justifyContent: 'space-around',
 	},
 	rowWrapper: {
 		flexDirection: 'row',
-		alignSelf: 'stretch',
 		alignItems: 'center',
+		paddingTop: 10,
+		paddingBottom: 10,
 		paddingLeft: 20,
 		paddingRight: 20,
-		paddingBottom: 10,
-		justifyContent: 'flex-start',
+		justifyContent: 'space-around',
 		backgroundColor: '#ffffff',
 	},
 	line: {
-		alignSelf: 'stretch',
 		height: 1,
 		borderWidth: 0.25,
 		borderColor: '#d0d0d0'
@@ -187,13 +197,12 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 	},
 	textInput: {
-		flex: 3,
-		width: 200,
+		flex: 2,
 		height: 30,
 		fontSize: 12,
 	},
 	loginClickableArea: {
-		marginTop: 10
+		alignSelf: 'center',
 	},
 	loginText: {
 		fontSize: 20,
@@ -206,7 +215,7 @@ var styles = StyleSheet.create({
 	},
 	forgetPasswordCliableArea: {
 		alignSelf: 'flex-start',
-		marginTop: 10,
+		marginTop: 15,
 		marginLeft: 10,
 	},
 	forgetPasswordLabel: {
