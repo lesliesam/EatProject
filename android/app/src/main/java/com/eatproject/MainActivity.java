@@ -2,25 +2,25 @@ package com.eatproject;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentTabHost;
+import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TabHost;
 import android.widget.TextView;
 
-import com.facebook.react.ReactPackage;
-import com.facebook.react.ReactRootView;
-import com.facebook.react.shell.MainReactPackage;
-
-import java.util.Arrays;
-import java.util.List;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends ReactActivity {
+public class MainActivity extends AppCompatActivity implements DefaultHardwareBackBtnHandler {
 
     private int currentTab = -1;
     private static final int TAB_TRADE = 0;
@@ -30,11 +30,11 @@ public class MainActivity extends ReactActivity {
     private static final int TAB_MINE = 4;
 
     private Class fragmentArray[] = {
-            EmptyFragment.class,
+            LandingFragment.class,
             EmptyFragment.class,
             EmptyFragment.class,
             CompeitionFragment.class,
-            EmptyFragment.class
+            SettingsFragment.class
     };
 
     private int strTabArray[] = {
@@ -45,8 +45,6 @@ public class MainActivity extends ReactActivity {
             R.string.tab_main_me
     };
 
-
-    @Bind(R.id.react_root_view) ReactRootView reactRootView;
     @Bind(R.id.tabhost) FragmentTabHost frg_tabHost;
 
     @Bind(R.id.imgTabMenu0) ImageView imgTabMenu0;
@@ -61,6 +59,9 @@ public class MainActivity extends ReactActivity {
     @Bind(R.id.tvTabMenu3) TextView tvTabMenu3;
     @Bind(R.id.tvTabMenu4) TextView tvTabMenu4;
 
+    private ReactInstanceManager mReactInstanceManager;
+    private boolean mDoRefresh = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         SharedPreferences preferences =
@@ -70,47 +71,11 @@ public class MainActivity extends ReactActivity {
 
         super.onCreate(savedInstanceState);
 
+        mReactInstanceManager = RNManager.getInstanceManager(getApplication());
+        setContentView(R.layout.main);
         ButterKnife.bind(this);
         initTabFragments();
         setTabCurrent(TAB_TRADE);
-    }
-
-    /**
-     * Returns the name of the main component registered from JavaScript.
-     * This is used to schedule rendering of the component.
-     */
-    @Override
-    protected String getMainComponentName() {
-        return "EatProject";
-    }
-
-    /**
-     * Returns whether dev mode should be enabled.
-     * This enables e.g. the dev menu.
-     */
-    @Override
-    protected boolean getUseDeveloperSupport() {
-        return BuildConfig.DEBUG;
-    }
-
-   /**
-   * A list of packages used by the app. If the app uses additional views
-   * or modules besides the default ones, add more packages here.
-   */
-    @Override
-    protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-        new MainReactPackage()
-      );
-    }
-
-    @Override
-    protected int getContentView() {
-        return R.layout.react_activity_main;
-    }
-
-    protected ReactRootView createRootView() {
-        return (ReactRootView) findViewById(R.id.react_root_view);
     }
 
     private void initTabFragments() {
@@ -133,11 +98,6 @@ public class MainActivity extends ReactActivity {
         if (index != currentTab) {
             currentTab = index;
             frg_tabHost.setCurrentTab(currentTab);
-            if (currentTab == TAB_COMPETITION) {
-                reactRootView.setVisibility(View.GONE);
-            } else {
-                reactRootView.setVisibility(View.VISIBLE);
-            }
 
             imgTabMenu0.setBackgroundResource(currentTab == TAB_TRADE ? R.drawable.tab_menu0_active : R.drawable.tab_menu0_normal);
             imgTabMenu1.setBackgroundResource(currentTab == TAB_STOCKGOD ? R.drawable.tab_menu1_active : R.drawable.tab_menu1_normal);
@@ -178,5 +138,48 @@ public class MainActivity extends ReactActivity {
                 setTabCurrent(TAB_COMPETITION);
                 break;
         }
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (mReactInstanceManager != null &&
+                mReactInstanceManager.getDevSupportManager().getDevSupportEnabled()) {
+            if (keyCode == KeyEvent.KEYCODE_MENU) {
+                mReactInstanceManager.showDevOptionsDialog();
+                return true;
+            }
+            if (keyCode == KeyEvent.KEYCODE_R && !(getCurrentFocus() instanceof EditText)) {
+                // Enable double-tap-R-to-reload
+                if (mDoRefresh) {
+                    mReactInstanceManager.getDevSupportManager().handleReloadJS();
+                    mDoRefresh = false;
+                } else {
+                    mDoRefresh = true;
+                    new Handler().postDelayed(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    mDoRefresh = false;
+                                }
+                            },
+                            200);
+                }
+            }
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mReactInstanceManager != null) {
+            mReactInstanceManager.onBackPressed();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public void invokeDefaultOnBackPressed() {
+        super.onBackPressed();
     }
 }

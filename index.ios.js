@@ -17,7 +17,7 @@ var AppNavigator = require('./AppNavigator')
 var EatProject = React.createClass({
   render: function() {
     return (
-      <AppNavigator />
+      <AppNavigator initialViewRoute={'landing'}/>
     );
   }
 });

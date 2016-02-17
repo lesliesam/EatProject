@@ -67,11 +67,15 @@ var RouteMapper = function(route, navigationOperations, onComponentRef) {
 };
 
 var AppNavigator = React.createClass({
+	propTypes: {
+		initialViewRoute: React.PropTypes.string,
+	},
+
 	render: function() {
 	    return (
 		<Navigator
 			style={styles.container}
-			initialRoute={{name: 'landing'}}
+			initialRoute={{name: this.props.initialViewRoute}}
 			configureScene={() => Navigator.SceneConfigs.PushFromRight}
 			renderScene={RouteMapper} />
 		);

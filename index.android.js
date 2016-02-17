@@ -15,10 +15,18 @@ var {
 
 var AppNavigator = require('./AppNavigator')
 
-var EatProject = React.createClass({
+var LandingPage = React.createClass({
   render: function() {
     return (
-      <AppNavigator />
+      <AppNavigator initialViewRoute={'landing'}/>
+    );
+  }
+});
+
+var SettingsPage = React.createClass({
+  render: function() {
+    return (
+      <AppNavigator initialViewRoute={'mySettings'}/>
     );
   }
 });
@@ -30,4 +38,5 @@ var styles = StyleSheet.create({
   },
 });
 
-AppRegistry.registerComponent('EatProject', () => EatProject);
+AppRegistry.registerComponent('Landing_Page', () => LandingPage);
+AppRegistry.registerComponent('Settings_Page', () => SettingsPage);
